@@ -6,6 +6,7 @@ import logging
 import sys
 from typing import Protocol
 
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QWidget
 
 log = logging.getLogger(__name__)
@@ -25,8 +26,15 @@ class NativeBackdrop(Protocol):
         ...
 
 
+_NATIVE_QPA = {"win32": "windows", "darwin": "cocoa"}
+
+
 def create_backdrop(widget: QWidget) -> NativeBackdrop | None:
     """Attach the platform material to ``widget``'s native window, or return ``None``."""
+    # Only the platform's own Qt plugin hands out real HWND / NSView handles for winId();
+    # offscreen and similar plugins return opaque ids that must not be dereferenced.
+    if QGuiApplication.platformName() != _NATIVE_QPA.get(sys.platform):
+        return None
     try:
         if sys.platform == "win32":
             from shazam_desktop.ui import native_windows
