@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import io
+import json
 import os
 import shutil
 import subprocess
@@ -16,10 +17,11 @@ from pathlib import Path
 
 from shazam_desktop import __version__
 from shazam_desktop.audio.backend import AudioStream, FrameCallback
+from shazam_desktop.audio.backends.macos_system import find_helper, macos_version
 from shazam_desktop.audio.sources import AudioSource, SourceCatalog, unavailable_catalog
 from shazam_desktop.errors import ErrorKind, RecognitionError
 from shazam_desktop.recognition.models import Track
-from shazam_desktop.runtime import bundled_tools_dir, is_frozen
+from shazam_desktop.runtime import bundled_helper_dir, bundled_tools_dir, is_frozen
 
 _COPYLEFT_FLAGS = ("--enable-gpl", "--enable-nonfree", "--enable-version3")
 _TOOL_TIMEOUT = 20
@@ -85,6 +87,44 @@ def _platform_imports() -> str:
     for module in modules:
         importlib.import_module(module)
     return ", ".join(modules) or "none required"
+
+
+def expected_helper_backend(version: tuple[int, ...]) -> str:
+    """The capture mechanism the helper must pick on a given macOS release."""
+    if version[:2] >= (14, 2):
+        return "tap"
+    return "sck" if version[:2] >= (13, 0) else "none"
+
+
+def verify_probe(output: str, version: tuple[int, ...]) -> str:
+    """Validate the helper's ``--probe`` JSON; returns a one-line summary."""
+    info = json.loads(output)
+    expected = expected_helper_backend(version)
+    if info.get("backend") != expected:
+        raise RuntimeError(f"helper chose {info.get('backend')!r}, expected {expected!r}")
+    if (info.get("format"), info.get("rate"), info.get("channels")) != ("s16le", 16000, 1):
+        raise RuntimeError(f"unexpected output format in {output.strip()}")
+    return f"{info['backend']} backend on macOS {info.get('os')}"
+
+
+def _audio_helper() -> str:
+    if sys.platform != "darwin":
+        return "not applicable"
+    helper = find_helper()
+    if helper is None:
+        raise RuntimeError("the audio helper was not found")
+    if is_frozen():
+        directory = bundled_helper_dir()
+        if directory is None or helper.resolve().parent != directory.resolve():
+            raise RuntimeError(f"the helper resolves to {helper}, outside the bundle")
+    probe = subprocess.run(
+        [str(helper), "--probe"],
+        capture_output=True,
+        text=True,
+        timeout=_TOOL_TIMEOUT,
+        check=True,
+    )
+    return f"{verify_probe(probe.stdout, macos_version())} [{helper}]"
 
 
 def _find_tool(name: str) -> Path:
@@ -174,6 +214,7 @@ def default_checks() -> list[tuple[str, Check]]:
         ("qt imports", _qt_imports),
         ("shazam imports", _shazam_imports),
         ("platform imports", _platform_imports),
+        ("audio helper", _audio_helper),
         ("ffmpeg tools", _ffmpeg_tools),
         ("audio decode", _decode_audio),
         ("qt offscreen", _qt_offscreen),

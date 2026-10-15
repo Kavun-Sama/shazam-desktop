@@ -5,7 +5,13 @@ from pathlib import Path
 import pytest
 
 from shazam_desktop.__main__ import build_parser, main
-from shazam_desktop.selfcheck import CheckResult, default_checks, run_checks, run_self_check
+from shazam_desktop.selfcheck import (
+    CheckResult,
+    default_checks,
+    run_checks,
+    run_self_check,
+    verify_probe,
+)
 
 
 def passing() -> str:
@@ -52,6 +58,7 @@ def test_default_checks_cover_the_bundle_contents() -> None:
         "qt imports",
         "shazam imports",
         "platform imports",
+        "audio helper",
         "ffmpeg tools",
         "audio decode",
         "qt offscreen",
@@ -82,3 +89,24 @@ def test_main_runs_the_self_check_without_starting_the_app(
     monkeypatch.setattr("shazam_desktop.selfcheck.run_self_check", fake_run_self_check)
     assert main(["--self-check"]) == 7
     assert seen == [None]
+
+
+PROBE = '{"backend":"%s","channels":1,"format":"s16le","os":"14.5.0","rate":16000}'
+
+
+@pytest.mark.parametrize(
+    ("version", "backend"),
+    [((15, 0), "tap"), ((14, 2), "tap"), ((14, 1), "sck"), ((13, 6), "sck"), ((12, 7), "none")],
+)
+def test_helper_probe_must_match_the_release(version: tuple[int, ...], backend: str) -> None:
+    assert backend in verify_probe(PROBE % backend, version)
+
+
+def test_helper_probe_with_the_wrong_backend_is_rejected() -> None:
+    with pytest.raises(RuntimeError, match="expected 'tap'"):
+        verify_probe(PROBE % "sck", (15, 0))
+
+
+def test_helper_probe_with_the_wrong_format_is_rejected() -> None:
+    with pytest.raises(RuntimeError, match="unexpected output format"):
+        verify_probe(PROBE.replace("16000", "44100") % "tap", (15, 0))
