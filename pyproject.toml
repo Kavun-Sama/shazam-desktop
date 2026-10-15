@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shazam-desktop"
+dynamic = ["version"]
+description = "Compact desktop music recognizer with a global hotkey."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6>=6.7",
+    "ShazamAPI>=0.0.2",
+    "requests>=2.31",
+    "numpy>=1.26",
+    "sounddevice>=0.4.6",
+    "pynput>=1.7.6",
+    "platformdirs>=4.0",
+    "audioop-lts>=0.2; python_version >= '3.13'",
+    "PyAudioWPatch>=0.2.12; sys_platform == 'win32'",
+    "pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-pynput",
+    "types-requests",
+]
+build = [
+    "pyinstaller==6.22.3",
+]
+
+[project.scripts]
+shazam-desktop = "shazam_desktop.__main__:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "shazam_desktop.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["shazam_desktop*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "C4", "PIE", "RET", "RUF", "PT", "TID"]
+
+[tool.ruff.lint.per-file-ignores]
+# Qt overrides keep their camelCase names.
+"shazam_desktop/ui/*" = ["N802"]
+"shazam_desktop/recognition/shazam.py" = ["N802", "N803"]
+"tests/*" = ["N802"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["shazam_desktop", "tests", "scripts", "packaging"]
+
+[[tool.mypy.overrides]]
+module = ["sounddevice", "pyaudiowpatch", "objc", "AppKit", "Foundation", "ShazamAPI", "ShazamAPI.*", "pydub", "pydub.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# The unofficial client is untyped; the single adapter subclasses it to observe requests.
+module = "shazam_desktop.recognition.shazam"
+disallow_subclassing_any = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    "ignore::SyntaxWarning",
+    "ignore::DeprecationWarning:pydub.*",
+    "ignore:Couldn't find ffprobe:RuntimeWarning",
+]
