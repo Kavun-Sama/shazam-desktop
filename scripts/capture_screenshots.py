@@ -31,6 +31,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QApplication
 
 from shazam_desktop.audio.backend import AudioStream, FrameCallback
+from shazam_desktop.audio.backends.macos_system import SYSTEM_HINT_OLD_OS
 from shazam_desktop.audio.sources import (
     AudioSource,
     InputDevice,
@@ -56,7 +57,7 @@ class StubBackend:
             [InputDevice(1, "MacBook Pro Microphone"), InputDevice(2, "USB Audio Device")],
             default_index=1,
             loopback=None,
-            system_hint="Install BlackHole. See the README.",
+            system_hint=SYSTEM_HINT_OLD_OS,
         )
 
     def open_stream(self, source: AudioSource, on_frames: FrameCallback) -> AudioStream:

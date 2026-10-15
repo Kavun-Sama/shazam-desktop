@@ -117,10 +117,20 @@ stores the hotkey on the first source change, so edit it there to override the d
 
 - **Windows.** WASAPI loopback through PyAudioWPatch, no setup. It mirrors the default output
   device.
-- **macOS.** There is no native capture API reachable from Python. Install
-  [BlackHole](https://existential.audio/blackhole/), create a Multi-Output Device (your speakers +
-  BlackHole) in Audio MIDI Setup and make it the system output. BlackHole then appears as
-  System Audio. Without it the entry is disabled with a hint.
+- **macOS 13 and newer.** No drivers or audio routing. A small Swift helper
+  (`macos/AudioHelper`, `shazam-audio-helper`) captures the system mix and streams 16 kHz mono
+  s16le PCM to the app over a pipe. It uses a Core Audio process tap on macOS 14.2+ and a
+  ScreenCaptureKit audio stream on macOS 13 to 14.1. Playback is not muted or changed.
+- **macOS below 13.** System Audio is disabled with a hint; microphones work.
+
+Permission prompts on macOS:
+
+- 14.2+: **system audio recording** (Privacy & Security → Screen & System Audio Recording).
+  The first run asks; if the answer is not given in time or is "Don't Allow", the card says
+  "System audio blocked": grant it in that pane, then press "Try again".
+- 13 to 14.1: **Screen Recording** (same pane). ScreenCaptureKit requires it even for audio only;
+  nothing is recorded from the screen.
+- If the helper itself dies, the card says "Audio helper stopped".
 
 ## Development
 
@@ -151,10 +161,16 @@ Locally (on the platform you build for):
 
 ```sh
 bash packaging/build_ffmpeg.sh build/ffmpeg          # Windows: from an MSYS2 MINGW64 shell
+bash packaging/build_audio_helper.sh build/helper    # macOS only: needs Xcode command line tools
 pip install -e ".[build]"
-FFMPEG_DIR=build/ffmpeg pyinstaller --noconfirm packaging/shazam-desktop.spec
+FFMPEG_DIR=build/ffmpeg AUDIO_HELPER_DIR=build/helper pyinstaller --noconfirm packaging/shazam-desktop.spec
 dist/shazam-desktop --self-check                     # macOS: dist/"Shazam Desktop.app"/Contents/MacOS/...
 ```
+
+On macOS, `--self-check` also runs `shazam-audio-helper --probe` and checks that it picked the
+backend that matches the OS. The helper's portable core (mixdown, resampler, PCM encoder) has
+unit tests: `swift test --package-path macos/AudioHelper`. For development, the Python app finds a
+local build in `macos/AudioHelper/.build/{release,debug}` or via `SHAZAM_AUDIO_HELPER`.
 
 `--self-check` exits with 0 when everything is in place; `--report FILE` also writes the report
 to a file (a windowed Windows build has no console).
@@ -175,7 +191,7 @@ to a file (a windowed Windows build has no console).
 - With native blur on Windows the shadow is drawn by DWM on a best-effort basis.
 - The macOS input device list is not refreshed while the app runs; restart after plugging in a
   device.
-- Linux is not a goal: the code imports there, but there is no loopback source and no native blur.
+- Linux is not a goal: the code imports there, but there is no system-audio source and no native blur.
 
 ## Decisions
 
@@ -189,8 +205,13 @@ to a file (a windowed Windows build has no console).
   "No audio from source" on system audio. A 3 s stall of frames maps to the latter.
 - A deadline hit during recognition is reported as a network error.
 - The source is stored as `mic:<name>`; a vanished device falls back to the default microphone.
-- Loopback-like devices (BlackHole, Soundflower, Loopback, monitors) are excluded from the
+- Loopback-style input devices (Soundflower, Loopback, monitors) are excluded from the
   microphone list.
+- Helper protocol: PCM on stdout, JSON event lines on stderr (`permission_prompt`, `ready`,
+  `error`), exit status 2 permission denied, 3 unsupported macOS, 4 other failure; closing its
+  stdin stops it. The tap path has no public permission query, so the helper asks TCC through
+  `TCCAccessPreflight`/`TCCAccessRequest` (private, resolved at run time) and falls back to a
+  silence watchdog if they are missing.
 - Windows hotkey: `RegisterHotKey` on a private message-loop thread. It matches by virtual-key
   code, so it works under any keyboard layout and while another window is focused. `pynput`
   matched by layout character (Cyrillic `ы` instead of `s`) and was dropped there.
