@@ -49,6 +49,10 @@ class _PyAudioStream:
     def sample_rate(self) -> int:
         return self._sample_rate
 
+    @property
+    def failure(self) -> RecognitionError | None:
+        return None
+
     def close(self) -> None:
         try:
             self._stream.stop_stream()

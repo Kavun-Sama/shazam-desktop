@@ -198,3 +198,11 @@ def test_open_failure_surfaces_as_is() -> None:
     with pytest.raises(RecognitionError) as raised:
         run(Failing(), ScriptedRecognizer([TRACK]))
     assert raised.value.kind is ErrorKind.PERMISSION_DENIED
+
+
+@pytest.mark.parametrize("kind", [ErrorKind.SYSTEM_AUDIO_DENIED, ErrorKind.HELPER_FAILED])
+def test_stream_failure_ends_the_run_with_its_own_error(kind: ErrorKind) -> None:
+    backend = FakeBackend(seconds=0, failure=RecognitionError(kind, "helper died"))
+    with pytest.raises(RecognitionError) as raised:
+        run(backend, ScriptedRecognizer([TRACK]), source=SYSTEM)
+    assert raised.value.kind is kind

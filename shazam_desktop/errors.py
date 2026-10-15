@@ -13,6 +13,8 @@ class ErrorKind(Enum):
     FFMPEG_MISSING = auto()
     SOURCE_UNAVAILABLE = auto()
     PERMISSION_DENIED = auto()
+    SYSTEM_AUDIO_DENIED = auto()
+    HELPER_FAILED = auto()
     UNEXPECTED = auto()
 
 

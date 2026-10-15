@@ -8,6 +8,7 @@ from collections.abc import MutableMapping
 from pathlib import Path
 
 TOOLS_DIR_NAME = "ffmpeg"
+HELPER_DIR_NAME = "helper"
 
 
 def is_frozen() -> bool:
@@ -38,3 +39,12 @@ def prepend_bundled_tools_to_path(
     existing = target.get("PATH", "")
     target["PATH"] = os.pathsep.join(filter(None, (str(directory), existing)))
     return directory
+
+
+def bundled_helper_dir() -> Path | None:
+    """Directory holding the bundled macOS audio helper, or ``None`` outside a bundle."""
+    root = getattr(sys, "_MEIPASS", None)
+    if not is_frozen() or root is None:
+        return None
+    directory = Path(root) / HELPER_DIR_NAME
+    return directory if directory.is_dir() else None

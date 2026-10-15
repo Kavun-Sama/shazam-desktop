@@ -15,4 +15,8 @@ def create_backend() -> AudioBackend:
         return WasapiBackend()
     from shazam_desktop.audio.backends.sounddevice_backend import SoundDeviceBackend
 
+    if sys.platform == "darwin":
+        from shazam_desktop.audio.backends.macos_backend import MacOSBackend
+
+        return MacOSBackend(SoundDeviceBackend())
     return SoundDeviceBackend()

@@ -7,7 +7,7 @@ from typing import Protocol
 
 from shazam_desktop.audio.pcm import Int16Array
 from shazam_desktop.audio.sources import AudioSource, SourceCatalog
-from shazam_desktop.errors import ErrorKind
+from shazam_desktop.errors import ErrorKind, RecognitionError
 
 FrameCallback = Callable[[Int16Array], None]
 
@@ -19,6 +19,11 @@ class AudioStream(Protocol):
 
     @property
     def sample_rate(self) -> int: ...
+
+    @property
+    def failure(self) -> RecognitionError | None:
+        """The error that ended the stream on its own, if any; ``None`` while it is healthy."""
+        ...
 
     def close(self) -> None: ...
 

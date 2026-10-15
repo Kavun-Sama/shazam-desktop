@@ -11,6 +11,7 @@ import numpy as np
 from shazam_desktop.audio.backend import AudioBackend, AudioStream
 from shazam_desktop.audio.pcm import Int16Array, pcm_to_wav, rms_level
 from shazam_desktop.audio.sources import AudioSource
+from shazam_desktop.errors import RecognitionError
 
 
 class Capture:
@@ -52,6 +53,12 @@ class Capture:
         stream, self._stream = self._stream, None
         if stream is not None:
             stream.close()
+
+    @property
+    def failure(self) -> RecognitionError | None:
+        """The error that stopped the underlying stream, if it died on its own."""
+        stream = self._stream
+        return None if stream is None else stream.failure
 
     @property
     def seconds(self) -> float:

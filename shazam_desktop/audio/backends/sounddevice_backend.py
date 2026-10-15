@@ -1,14 +1,13 @@
 """PortAudio input through ``sounddevice``.
 
-Microphones work everywhere. System audio is available only when the OS exposes a
-loopback *input* device (BlackHole, Soundflower, Loopback on macOS); there is no
-native system-audio capture API reachable from Python on macOS.
+Microphones work everywhere. System audio is offered only when the OS exposes a loopback
+*input* device (for example a PulseAudio monitor); macOS system audio comes from the Swift
+helper instead, see :mod:`shazam_desktop.audio.backends.macos_backend`.
 """
 
 from __future__ import annotations
 
 import logging
-import sys
 from collections.abc import Sequence
 from typing import Any
 
@@ -25,11 +24,10 @@ from shazam_desktop.errors import ErrorKind, RecognitionError
 
 log = logging.getLogger(__name__)
 
-LOOPBACK_MARKERS = ("blackhole", "soundflower", "loopback", "monitor of")
+LOOPBACK_MARKERS = ("soundflower", "loopback", "monitor of")
 _BLOCKS_PER_SECOND = 20
 
-SYSTEM_HINT_MACOS = "Install BlackHole. See the README."
-SYSTEM_HINT_OTHER = "System audio capture isn't supported on this platform."
+SYSTEM_HINT = "System audio capture isn't supported on this platform."
 
 
 def is_loopback_name(name: str) -> bool:
@@ -73,6 +71,10 @@ class _SoundDeviceStream:
     def sample_rate(self) -> int:
         return self._sample_rate
 
+    @property
+    def failure(self) -> RecognitionError | None:
+        return None
+
     def close(self) -> None:
         try:
             self._stream.stop()
@@ -101,8 +103,7 @@ class SoundDeviceBackend:
             if info["max_input_channels"] > 0
         ]
         microphones, loopback = split_devices(inputs)
-        hint = SYSTEM_HINT_MACOS if sys.platform == "darwin" else SYSTEM_HINT_OTHER
-        return build_catalog(microphones, default_index, loopback, hint)
+        return build_catalog(microphones, default_index, loopback, SYSTEM_HINT)
 
     def open_stream(self, source: AudioSource, on_frames: FrameCallback) -> AudioStream:
         if source.device is None:

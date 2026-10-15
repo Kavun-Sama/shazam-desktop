@@ -18,6 +18,7 @@ from shazam_desktop.audio.sources import (
     SourceCatalog,
     SourceKind,
 )
+from shazam_desktop.errors import RecognitionError
 from shazam_desktop.recognition.models import Track
 
 MIC = AudioSource(DEFAULT_MIC_KEY, "Microphone", SourceKind.MICROPHONE, device=0)
@@ -34,8 +35,9 @@ def tone(seconds: float, rate: int = 16000, amplitude: int = 8000) -> Int16Array
 
 
 class FakeStream:
-    def __init__(self, rate: int) -> None:
+    def __init__(self, rate: int, failure: RecognitionError | None = None) -> None:
         self.sample_rate = rate
+        self.failure = failure
         self.closed = False
 
     def close(self) -> None:
@@ -53,12 +55,13 @@ class FakeBackend:
     streams: list[FakeStream] = field(default_factory=list)
     gate: threading.Event | None = None
     chunk_delay: float = 0.0
+    failure: RecognitionError | None = None
 
     def list_sources(self) -> SourceCatalog:
         return self.catalog
 
     def open_stream(self, source: AudioSource, on_frames: FrameCallback) -> FakeStream:
-        stream = FakeStream(self.rate)
+        stream = FakeStream(self.rate, self.failure)
         self.streams.append(stream)
         if self.gate is None and self.chunk_delay == 0:
             self._deliver(on_frames)

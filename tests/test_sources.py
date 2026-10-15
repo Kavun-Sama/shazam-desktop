@@ -25,7 +25,7 @@ def test_catalog_lists_default_mic_devices_then_system_audio() -> None:
     catalog = build_catalog(
         [InputDevice(3, "USB Mic"), InputDevice(5, "Line In")],
         default_index=3,
-        loopback=InputDevice(7, "BlackHole 2ch"),
+        loopback=InputDevice(7, "Loopback Audio 2ch"),
         system_hint=HINT,
     )
     assert [s.key for s in catalog.sources] == [
@@ -146,7 +146,7 @@ def macos_devices() -> list[dict[str, Any]]:
     return [
         _device(0, "MacBook Pro Speakers", 0),
         _device(1, "MacBook Pro Microphone", 1),
-        _device(2, "BlackHole 2ch", 2),
+        _device(2, "Monitor of Built-in Audio", 2),
         _device(3, "USB Mic", 1, 44100.0),
     ]
 
@@ -155,7 +155,6 @@ def test_sounddevice_backend_builds_catalog_from_found_devices(
     monkeypatch: pytest.MonkeyPatch, macos_devices: list[dict[str, Any]]
 ) -> None:
     monkeypatch.setattr(sounddevice_backend, "_load", lambda: _fake_sd(macos_devices, default=1))
-    monkeypatch.setattr("sys.platform", "darwin")
     catalog = sounddevice_backend.SoundDeviceBackend().list_sources()
 
     assert [s.label for s in catalog.microphones] == [
@@ -169,19 +168,15 @@ def test_sounddevice_backend_builds_catalog_from_found_devices(
     assert (system.available, system.device) == (True, 2)
 
 
-def test_sounddevice_backend_without_loopback_explains_how_to_get_one(
+def test_sounddevice_backend_without_loopback_disables_system_audio(
     monkeypatch: pytest.MonkeyPatch, macos_devices: list[dict[str, Any]]
 ) -> None:
-    without_blackhole = [d for d in macos_devices if "BlackHole" not in d["name"]]
-    monkeypatch.setattr(
-        sounddevice_backend, "_load", lambda: _fake_sd(without_blackhole, default=1)
-    )
-    monkeypatch.setattr("sys.platform", "darwin")
+    plain = [d for d in macos_devices if "Monitor" not in d["name"]]
+    monkeypatch.setattr(sounddevice_backend, "_load", lambda: _fake_sd(plain, default=1))
     system = sounddevice_backend.SoundDeviceBackend().list_sources().system
     assert system is not None
     assert not system.available
-    assert system.hint is not None
-    assert "BlackHole" in system.hint
+    assert system.hint == sounddevice_backend.SYSTEM_HINT
 
 
 def test_sounddevice_backend_survives_a_missing_portaudio(
@@ -239,7 +234,6 @@ def test_sounddevice_open_error_is_classified(monkeypatch: pytest.MonkeyPatch) -
 @pytest.mark.parametrize(
     ("name", "expected"),
     [
-        ("BlackHole 16ch", True),
         ("Soundflower (2ch)", True),
         ("Loopback Audio", True),
         ("Monitor of Built-in Audio", True),

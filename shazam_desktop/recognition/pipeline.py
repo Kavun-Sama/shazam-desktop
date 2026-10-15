@@ -70,9 +70,10 @@ class Pipeline:
         Raises :class:`CancelledError` when ``cancel`` is set and
         :class:`RecognitionError` for every failure with a user-facing class.
         """
-        deadline = self._clock() + self._config.deadline
         windows = self._config.attempt_windows
         with Capture(self._backend, source, callbacks.on_level) as capture:
+            # Opening a stream can wait on a permission prompt, so the clock starts afterwards.
+            deadline = self._clock() + self._config.deadline
             for index, window in enumerate(windows):
                 self._listen(capture, window, source, cancel, deadline)
                 callbacks.on_phase(Phase.FINGERPRINTING)
@@ -98,6 +99,8 @@ class Pipeline:
         while (seconds := capture.seconds) < target:
             if cancel.wait(config.poll):
                 raise CancelledError
+            if (failure := capture.failure) is not None:
+                raise failure
             now = self._clock()
             if seconds > last_seconds:
                 last_seconds, progress_at = seconds, now
