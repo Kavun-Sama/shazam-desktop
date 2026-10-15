@@ -182,3 +182,8 @@ to a file (a windowed Windows build has no console).
 - Unspecified UI details: one 13 px system font, hierarchy by weight and colour; pill 72 px →
   card 128 px; width 320 px.
 - No config file is written until the source is changed.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Components bundled into the binaries keep their own licenses:
+see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
