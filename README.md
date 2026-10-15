@@ -1,9 +1,26 @@
-# shazam-desktop
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+    <img src="assets/banner-light.svg" alt="Shazam Desktop" width="100%">
+  </picture>
+</p>
 
-Compact desktop music recognizer for Windows 11 and macOS. Press a global hotkey (or click the
-button), the app listens for a few seconds and shows the title and artist.
+<h1 align="center">Shazam Desktop</h1>
 
-Python 3.11+, PySide6, [ShazamAPI](https://pypi.org/project/ShazamAPI/).
+<p align="center">
+  Compact desktop music recognizer for Windows 11 and macOS.<br>
+  Press a global hotkey (or click the button), the app listens for a few seconds and shows the
+  title and artist.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kavun-Sama/shazam-desktop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Kavun-Sama/shazam-desktop"></a>
+  <a href="https://github.com/Kavun-Sama/shazam-desktop/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/Kavun-Sama/shazam-desktop/build.yml?branch=main"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/Kavun-Sama/shazam-desktop"></a>
+  <img alt="Platforms: Windows, macOS" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS-8F5BFF">
+</p>
+
+<p align="center">Python 3.11+, PySide6, <a href="https://pypi.org/project/ShazamAPI/">ShazamAPI</a>.</p>
 
 ![Light theme: every state](screenshots/sheet-light.png)
 ![Dark theme: every state](screenshots/sheet-dark.png)
@@ -112,6 +129,7 @@ ruff check . && ruff format --check .
 mypy
 pytest
 python scripts/capture_screenshots.py screenshots   # offscreen renders of every state
+pip install -e ".[icons]" && python scripts/build_icons.py   # app icon (.ico, .icns) and README banners
 ```
 
 Layout: `audio/` capture and sources, `recognition/` pipeline and the `Recognizer` interface (one
