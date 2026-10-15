@@ -112,9 +112,24 @@ jobs:
             echo "bundled ffmpeg is not LGPL-only" >&2; exit 1
           fi
 
+      # The helper is built natively on each runner (arm64 on macos-14, x86_64 on macos-15-intel).
+      - name: Test and build audio helper (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          swift --version
+          swift test --package-path macos/AudioHelper
+          bash packaging/build_audio_helper.sh build/helper
+      - name: Probe helper capture (macOS, informational)
+        if: runner.os == 'macOS'
+        run: |
+          # Hosted runners have no audio hardware and may refuse the privacy request; this only
+          # records how the helper reports that, it does not gate the build.
+          (sleep 8 | perl -e 'alarm 30; exec @ARGV' build/helper/shazam-audio-helper capture | wc -c) || true
+
       - name: Build bundle
         env:
           FFMPEG_DIR: ${{ github.workspace }}/build/ffmpeg
+          AUDIO_HELPER_DIR: ${{ github.workspace }}/build/helper
         run: pyinstaller --noconfirm --distpath dist --workpath build/pyinstaller packaging/shazam-desktop.spec
 
       # ---- Windows ----
@@ -209,6 +224,13 @@ jobs:
           echo "--- architectures:"; lipo -archs "$app/Contents/MacOS/shazam-desktop"
           echo "--- microphone usage description:"
           /usr/libexec/PlistBuddy -c 'Print :NSMicrophoneUsageDescription' "$app/Contents/Info.plist"
+          echo "--- audio capture usage description:"
+          /usr/libexec/PlistBuddy -c 'Print :NSAudioCaptureUsageDescription' "$app/Contents/Info.plist"
+          echo "--- audio helper:"
+          helper="$(find "$app" -type f -name shazam-audio-helper | head -1)"
+          test -n "$helper" || { echo "audio helper is missing from the app" >&2; exit 1; }
+          ls -l "$helper"; lipo -archs "$helper"; codesign -dv "$helper" 2>&1 | head -4
+          "$helper" --probe
           echo "--- icon:"
           icon="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist")"
           ls -l "$app/Contents/Resources/$icon"

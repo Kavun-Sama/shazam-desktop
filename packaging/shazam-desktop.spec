@@ -1,7 +1,8 @@
 # PyInstaller spec for shazam-desktop.
 #
 # Environment:
-#   FFMPEG_DIR  directory with the ffmpeg and ffprobe executables to bundle (required)
+#   FFMPEG_DIR        directory with the ffmpeg and ffprobe executables to bundle (required)
+#   AUDIO_HELPER_DIR  macOS only: directory with the built shazam-audio-helper (required)
 #
 # Windows builds one windowed .exe; macOS builds "Shazam Desktop.app"; other platforms
 # build a plain folder (used for local checks only).
@@ -21,6 +22,13 @@ for tool in TOOLS:
     if not tool.is_file():
         raise SystemExit(f"missing bundled tool: {tool}")
 
+BINARIES = [(str(tool), "ffmpeg") for tool in TOOLS]
+if sys.platform == "darwin":
+    helper = Path(os.environ["AUDIO_HELPER_DIR"]).resolve() / "shazam-audio-helper"
+    if not helper.is_file():
+        raise SystemExit(f"missing audio helper: {helper}")
+    BINARIES.append((str(helper), "helper"))
+
 # Qt modules the app never imports; keeping them out saves tens of megabytes.
 EXCLUDES = [
     "tkinter",
@@ -38,7 +46,7 @@ EXCLUDES = [
 analysis = Analysis(  # noqa: F821
     [str(ROOT / "packaging" / "launcher.py")],
     pathex=[str(ROOT)],
-    binaries=[(str(tool), "ffmpeg") for tool in TOOLS],
+    binaries=BINARIES,
     datas=[(str(ROOT / name), ".") for name in ("LICENSE", "THIRD_PARTY_NOTICES.md")],
     hiddenimports=[],
     excludes=EXCLUDES,
@@ -90,6 +98,10 @@ else:
                 "CFBundleVersion": __version__,
                 "LSMinimumSystemVersion": "11.0",
                 "NSHighResolutionCapable": True,
+                "NSAudioCaptureUsageDescription": (
+                    "Shazam Desktop listens to the audio your Mac is playing "
+                    "to identify the music."
+                ),
                 "NSMicrophoneUsageDescription": (
                     "Shazam Desktop listens through the microphone or an audio input "
                     "to identify the music that is playing."
