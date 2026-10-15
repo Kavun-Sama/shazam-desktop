@@ -12,7 +12,8 @@ FFMPEG_VERSION="8.1.3"
 FFMPEG_SHA256="7138d28c96d9d3e3af4ee3d8cad72741f8ffb40da90c1112235dea3ecd3178a3"
 FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"
 
-output_dir="${1:?usage: build_ffmpeg.sh OUTPUT_DIR}"
+mkdir -p "${1:?usage: build_ffmpeg.sh OUTPUT_DIR}"
+output_dir="$(cd "$1" && pwd)"  # absolute: the script changes directory below
 jobs="${FFMPEG_JOBS:-$( (nproc || sysctl -n hw.ncpu) 2>/dev/null || echo 2)}"
 work_dir="$(mktemp -d)"
 trap 'rm -rf "$work_dir"' EXIT
