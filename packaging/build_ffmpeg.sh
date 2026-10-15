@@ -44,23 +44,24 @@ configure_args=(
   --enable-filter=aresample,aformat,anull,abuffer,abuffersink
 )
 
+exe_suffix=""
 case "$(uname -s)" in
   Darwin)
     configure_args+=(--extra-cflags=-mmacosx-version-min=11.0 --extra-ldflags=-mmacosx-version-min=11.0)
     ;;
   MINGW* | MSYS*)
     configure_args+=(--target-os=mingw32 --arch=x86_64 --extra-ldflags=-static)
+    exe_suffix=".exe"
     ;;
 esac
 
 cd "$work_dir/ffmpeg-${FFMPEG_VERSION}"
 ./configure "${configure_args[@]}"
-make -j"$jobs" ffmpeg ffprobe
+make -j"$jobs" "ffmpeg${exe_suffix}" "ffprobe${exe_suffix}"
 
 mkdir -p "$output_dir"
 for tool in ffmpeg ffprobe; do
-  binary="$tool"
-  [ -f "${tool}.exe" ] && binary="${tool}.exe"
+  binary="${tool}${exe_suffix}"
   strip "$binary" 2>/dev/null || true
   cp "$binary" "$output_dir/$binary"
 done
