@@ -54,3 +54,32 @@ def test_leaves_path_alone_outside_a_bundle() -> None:
     environ = {"PATH": "/usr/bin"}
     assert prepend_bundled_tools_to_path(environ) is None
     assert environ == {"PATH": "/usr/bin"}
+
+
+def test_app_icon_is_found_in_a_checkout() -> None:
+    from shazam_desktop.runtime import app_icon_path
+
+    path = app_icon_path()
+    assert path is not None
+    assert path.name == "icon.ico"
+
+
+def test_app_icon_is_found_in_a_bundle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from shazam_desktop.runtime import app_icon_path
+
+    (tmp_path / "assets").mkdir()
+    icon = tmp_path / "assets" / "icon.ico"
+    icon.write_bytes(b"x")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path), raising=False)
+    assert app_icon_path() == icon
+
+
+def test_missing_bundled_icon_is_reported_as_none(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shazam_desktop.runtime import app_icon_path
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path), raising=False)
+    assert app_icon_path() is None

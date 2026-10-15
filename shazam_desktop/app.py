@@ -13,6 +13,7 @@ from shazam_desktop.controller import Controller
 from shazam_desktop.recognition.shazam import ShazamRecognizer
 from shazam_desktop.settings.config import SettingsStore
 from shazam_desktop.settings.hotkey import Hotkey
+from shazam_desktop.ui.app_icon import load_app_icon
 from shazam_desktop.ui.hotkey import GlobalHotkey
 from shazam_desktop.ui.tray import TrayIcon
 from shazam_desktop.ui.window import MainWindow
@@ -27,6 +28,8 @@ def run(argv: Sequence[str]) -> int:
     app = QApplication(list(argv))
     app.setApplicationName("Shazam Desktop")
     app.setQuitOnLastWindowClosed(False)
+    if (icon := load_app_icon()) is not None:
+        app.setWindowIcon(icon)
 
     controller = Controller(
         create_backend(), ShazamRecognizer(), SettingsStore(SettingsStore.default_path())

@@ -9,6 +9,8 @@ from pathlib import Path
 
 TOOLS_DIR_NAME = "ffmpeg"
 HELPER_DIR_NAME = "helper"
+ICON_DIR_NAME = "assets"
+ICON_FILE_NAME = "icon.ico"
 
 
 def is_frozen() -> bool:
@@ -48,3 +50,13 @@ def bundled_helper_dir() -> Path | None:
         return None
     directory = Path(root) / HELPER_DIR_NAME
     return directory if directory.is_dir() else None
+
+
+def app_icon_path() -> Path | None:
+    """The multi-size ``.ico`` used for window icons: from the bundle, or from a checkout."""
+    root = getattr(sys, "_MEIPASS", None)
+    if is_frozen() and root is not None:
+        candidate = Path(root) / ICON_DIR_NAME / ICON_FILE_NAME
+    else:
+        candidate = Path(__file__).resolve().parents[1] / "assets" / "icon" / ICON_FILE_NAME
+    return candidate if candidate.is_file() else None
