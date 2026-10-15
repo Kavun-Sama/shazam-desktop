@@ -209,6 +209,9 @@ jobs:
           echo "--- architectures:"; lipo -archs "$app/Contents/MacOS/shazam-desktop"
           echo "--- microphone usage description:"
           /usr/libexec/PlistBuddy -c 'Print :NSMicrophoneUsageDescription' "$app/Contents/Info.plist"
+          echo "--- icon:"
+          icon="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist")"
+          ls -l "$app/Contents/Resources/$icon"
           echo "--- signature:"; codesign -dv "$app" 2>&1 | head -6
           echo "--- bundled tools:"; find "$app" -type f \( -name ffmpeg -o -name ffprobe \) -exec ls -l {} \;
           "$app/Contents/MacOS/shazam-desktop" --self-check --report "$RUNNER_TEMP/selfcheck.txt" || status=$?
