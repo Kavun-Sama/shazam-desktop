@@ -14,6 +14,8 @@ from shazam_desktop.state import Phase
 from tests.fakes import MIC, SYSTEM, TRACK, FakeBackend, ScriptedRecognizer
 
 FAST = PipelineConfig(silence_check=0.5, stall=0.3, deadline=1.0, poll=0.005)
+# The fake delivers 0.5 s chunks; coarse OS timers (Windows) let the poll loop overshoot a window.
+FIRST_WINDOW, SECOND_WINDOW = 5.0, 10.0
 
 
 class Recorder:
@@ -52,7 +54,7 @@ def test_match_on_the_first_attempt_ends_the_run_early() -> None:
     assert run(backend, recognizer, recorder=recorder) == TRACK
 
     assert len(recognizer.calls) == 1
-    assert duration(recognizer.calls[0]) == pytest.approx(5.0, abs=0.6)
+    assert FIRST_WINDOW <= duration(recognizer.calls[0]) < SECOND_WINDOW
     assert recorder.phases == [Phase.FINGERPRINTING, Phase.MATCHING]
     assert backend.streams[0].closed
 
@@ -65,8 +67,8 @@ def test_second_attempt_runs_on_the_full_window() -> None:
     assert run(backend, recognizer, recorder=recorder) == TRACK
 
     first, second = (duration(wav) for wav in recognizer.calls)
-    assert first == pytest.approx(5.0, abs=0.6)
-    assert second == pytest.approx(10.0, abs=0.01)
+    assert FIRST_WINDOW <= first < SECOND_WINDOW
+    assert second == pytest.approx(SECOND_WINDOW, abs=0.01)
     assert recorder.phases == [
         Phase.FINGERPRINTING,
         Phase.MATCHING,
