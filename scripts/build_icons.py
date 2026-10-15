@@ -158,7 +158,7 @@ def banner_svg(theme: str) -> str:
 
 
 def main() -> None:
-    import cairosvg  # type: ignore[import-untyped]
+    import cairosvg
     from PIL import Image
 
     OUT.mkdir(parents=True, exist_ok=True)

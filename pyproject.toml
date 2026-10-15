@@ -81,3 +81,8 @@ filterwarnings = [
     "ignore::DeprecationWarning:pydub.*",
     "ignore:Couldn't find ffprobe:RuntimeWarning",
 ]
+
+[[tool.mypy.overrides]]
+# Only needed by scripts/build_icons.py, which runs with the optional "icons" extra.
+module = ["cairosvg", "PIL", "PIL.*"]
+ignore_missing_imports = true
