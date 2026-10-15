@@ -1,0 +1,38 @@
+{
+  "matches": [
+    {
+      "id": "1000000001",
+      "offset": 12.3456,
+      "timeskew": 0.0001,
+      "frequencyskew": -0.0002
+    }
+  ],
+  "timestamp": 1760550000000,
+  "timezone": "Europe/Moscow",
+  "tagid": "0A1B2C3D-0000-4000-8000-000000000001",
+  "track": {
+    "layout": "5",
+    "type": "MUSIC",
+    "key": "1000000001",
+    "title": "Neon Harbor",
+    "subtitle": "The Paper Satellites",
+    "images": {
+      "background": "https://images.example.com/background/neon-harbor.jpg",
+      "coverart": "https://images.example.com/cover/400x400/neon-harbor.jpg",
+      "coverarthq": "https://images.example.com/cover/1000x1000/neon-harbor.jpg",
+      "joecolor": "b:101820p:f2f2f2s:d9d9d9t:d1d1d1q:b5b5b5"
+    },
+    "share": {
+      "subject": "Neon Harbor - The Paper Satellites",
+      "text": "I used Shazam to discover Neon Harbor by The Paper Satellites.",
+      "href": "https://www.example.com/track/1000000001"
+    },
+    "genres": {"primary": "Electronic"},
+    "urlparams": {"{tracktitle}": "Neon+Harbor", "{trackartist}": "The+Paper+Satellites"},
+    "highlightsurls": {},
+    "relatedtracksurl": "https://api.example.com/related/1000000001",
+    "sections": [
+      {"type": "SONG", "metapages": [], "tabname": "Song", "metadata": []}
+    ]
+  }
+}
