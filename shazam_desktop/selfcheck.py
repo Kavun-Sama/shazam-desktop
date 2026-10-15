@@ -192,10 +192,17 @@ def _qt_offscreen() -> str:
     from shazam_desktop.controller import Controller
     from shazam_desktop.settings.config import SettingsStore
     from shazam_desktop.state import Phase, State
+    from shazam_desktop.ui.app_icon import load_app_icon
     from shazam_desktop.ui.window import MainWindow
 
     if QApplication.instance() is None:
         QApplication(["shazam-desktop"])
+    icon = load_app_icon()
+    if icon is None:
+        raise RuntimeError("the application icon is missing or unreadable")
+    icon_sizes = len(icon.availableSizes())
+    if icon_sizes < 4:
+        raise RuntimeError(f"the application icon has only {icon_sizes} sizes")
     with tempfile.TemporaryDirectory() as directory:
         store = SettingsStore(Path(directory) / "config.json")
         controller = Controller(_NullBackend(), _NullRecognizer(), store)
@@ -206,7 +213,10 @@ def _qt_offscreen() -> str:
     if pixmap.isNull() or pixmap.width() == 0:
         raise RuntimeError("the window rendered nothing")
     size = f"{pixmap.width()}x{pixmap.height()}"
-    return f"{QGuiApplication.platformName()} platform, window rendered {size}"
+    return (
+        f"{QGuiApplication.platformName()} platform, window rendered {size}, "
+        f"app icon with {icon_sizes} sizes"
+    )
 
 
 def default_checks() -> list[tuple[str, Check]]:

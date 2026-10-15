@@ -47,7 +47,10 @@ analysis = Analysis(  # noqa: F821
     [str(ROOT / "packaging" / "launcher.py")],
     pathex=[str(ROOT)],
     binaries=BINARIES,
-    datas=[(str(ROOT / name), ".") for name in ("LICENSE", "THIRD_PARTY_NOTICES.md")],
+    datas=[
+        *[(str(ROOT / name), ".") for name in ("LICENSE", "THIRD_PARTY_NOTICES.md")],
+        (str(ICON_DIR / "icon.ico"), "assets"),
+    ],
     hiddenimports=[],
     excludes=EXCLUDES,
     noarchive=False,
