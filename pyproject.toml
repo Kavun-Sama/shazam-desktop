@@ -32,6 +32,10 @@ dev = [
 build = [
     "pyinstaller==6.22.3",
 ]
+icons = [
+    "cairosvg>=2.7",
+    "pillow>=10.0",
+]
 
 [project.scripts]
 shazam-desktop = "shazam_desktop.__main__:main"
