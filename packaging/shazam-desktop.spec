@@ -13,6 +13,7 @@ ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH is injected by PyInstaller
 sys.path.insert(0, str(ROOT))
 from shazam_desktop import __version__  # noqa: E402
 
+ICON_DIR = ROOT / "assets" / "icon"
 FFMPEG_DIR = Path(os.environ["FFMPEG_DIR"]).resolve()
 EXECUTABLE_SUFFIX = ".exe" if sys.platform == "win32" else ""
 TOOLS = [FFMPEG_DIR / f"{name}{EXECUTABLE_SUFFIX}" for name in ("ffmpeg", "ffprobe")]
@@ -55,6 +56,7 @@ if sys.platform == "win32":
         [],
         name="shazam-desktop",
         console=False,
+        icon=str(ICON_DIR / "icon.ico"),
         upx=False,
         runtime_tmpdir=None,
     )
@@ -79,6 +81,7 @@ else:
         app = BUNDLE(  # noqa: F821
             collected,
             name="Shazam Desktop.app",
+            icon=str(ICON_DIR / "icon.icns"),
             bundle_identifier="io.github.kavun-sama.shazam-desktop",
             info_plist={
                 "CFBundleName": "Shazam Desktop",
