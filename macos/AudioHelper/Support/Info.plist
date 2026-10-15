@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.kavun-sama.shazam-desktop.audio-helper</string>
+    <key>CFBundleName</key>
+    <string>Shazam Desktop Audio Helper</string>
+    <key>CFBundleExecutable</key>
+    <string>shazam-audio-helper</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSBackgroundOnly</key>
+    <true/>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>Shazam Desktop listens to the audio your Mac is playing to identify the music.</string>
+</dict>
+</plist>

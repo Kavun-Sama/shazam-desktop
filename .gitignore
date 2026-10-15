@@ -14,3 +14,7 @@ screenshots/*
 !screenshots/sheet-dark.png
 !screenshots/source-menu-light.png
 *.log
+
+# Swift
+.build/
+*.xcodeproj
